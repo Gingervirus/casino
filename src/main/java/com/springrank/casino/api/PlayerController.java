@@ -36,7 +36,7 @@ public class PlayerController {
         if (player == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-
+        //return DTO that does not display username
         return new ResponseEntity<PlayerDTO>(modelMapper.map(player,PlayerDTO.class),HttpStatus.OK);
 
     }
