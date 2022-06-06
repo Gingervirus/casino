@@ -15,7 +15,6 @@ public class PlayerService {
     private PlayerRepository playerRepository;
 
     public Player getBalanceById(Long id){
-        playerRepository.findAll();
         return playerRepository.findById(id).orElse(null);
     }
 

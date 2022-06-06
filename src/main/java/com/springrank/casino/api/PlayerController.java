@@ -30,6 +30,7 @@ public class PlayerController {
 
     @GetMapping("/player/{playerId}/balance")
     public ResponseEntity<PlayerDTO> getBalance(@PathVariable("playerId") Long playerId) {
+        //Retrieve User Balance by id, Test User: 1l
         Player player = playerService.getBalanceById(playerId);
 
         if (player == null) {
@@ -41,21 +42,28 @@ public class PlayerController {
     }
 
     @PostMapping("/player/{playerId}/balance/update")
-    public ResponseEntity<TransactionResultDTO> updateBalance(@RequestBody Transaction transaction) {
+    public ResponseEntity<?> updateBalance(@RequestBody Transaction transaction) {
+        //Retrieve User Balance by id, Test User: 1l
         Player player = playerService.getBalanceById(transaction.getPlayerId());
 
         if (player == null || transaction.getAmount() < 0) {
+            //If user supplied amount below 0 return error
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         if (transaction.getAmount() > player.getBalance() && transaction.getTransactionType().equals("WAGER")) {
+            //If user WAGER is more than in account return Teacup Error
             return new ResponseEntity<>(HttpStatus.valueOf(418));
         }
 
+        //update old balance to new balance if WAGER Subtract from balance else if a WIN then add to Balance
         int balance;
         if (transaction.getTransactionType().equals("WAGER")){
             balance = player.getBalance() - transaction.getAmount();
-        }else{
+        }else if(transaction.getTransactionType().equals("WIN")){
             balance = player.getBalance() + transaction.getAmount();
+        }else{
+            //if user inserted incorrect Value for transaction type then throw error
+            return new ResponseEntity<>("transactionType can Only be WAGER or WIN",HttpStatus.BAD_REQUEST);
         }
 
         //Update player balance
@@ -72,12 +80,14 @@ public class PlayerController {
 
     @PostMapping("/admin/player/transactions")
     public ResponseEntity<List<TransactionDTO>> getTransactions(@RequestBody Player player){
+        //Retrieve user based on username, custom native query
         Player foundPlayer  = playerService.findByUsername(player.getUsername());
 
         if (foundPlayer == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
+        //returns a list and map to DTO that excludes the username from the list.
         return new ResponseEntity<>(transactionService.getTransactionsByUserId(foundPlayer.getId()).stream().map(post -> modelMapper.map(post, TransactionDTO.class)).collect(Collectors.toList()),HttpStatus.OK);
     }
 }
